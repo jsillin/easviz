@@ -28,7 +28,11 @@ def load_basemap(map_path):
 map_path='/home/jhs389/plotting/RenderData.tif'
 bm_img,bm_proj,bm_extent=load_basemap(map_path)
 
+import matplotlib.animation as manim
+
 rundate, runtime = spt.get_init_time('GFS')
+animfig = plt.figure(figsize=(15,15))
+ims = []
 
 for i in range(0,120):
 	fhr = i
@@ -55,3 +59,7 @@ for i in range(0,120):
 	ax.set_title('Valid: '+dtfs,loc='right',fontsize=11)
 	ax.set_title('GFS Forecast via NOAA \nPlot by Jack Sillin',loc='left',fontsize=11)
 	plt.savefig('global_gfs_pwat_'+str(fhr)+'.png',bbox_inches='tight',pad_inches=0.1)
+
+anim = manim.ArtistAnimation(animfig, ims, 20, 200,True)
+
+anim.save('pwat_anim_test.mp4', fps=12, codec='h264', dpi=120)

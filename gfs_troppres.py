@@ -7,26 +7,21 @@ Created on Thu Aug 12 05:03:20 2021
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
-from cartopy.feature.nightshade import Nightshade
-from matplotlib.path import Path
-from cartopy.mpl.patch import geos_to_path
-from datetime import datetime, timedelta
+
 from matplotlib.colors import Normalize
-import matplotlib.colors as mcolors
-import matplotlib.patches as mpatches
-import numpy as np
+
 import pandas as pd
 import xarray as xr
-import matplotlib.colors as col
 from metpy.plots import ctables
 from matplotlib.colors import ListedColormap, LinearSegmentedColormap, Normalize
 import supplementary_tools as spt
+import matplotlib.animation as manim
 
 rundate, runtime = spt.get_init_time('GFS')
 animfig = plt.figure(figsize=(15,15))
 ims = []
 
-for i in range(0,12):
+for i in range(0,120):
 	fhr = i
 	if fhr <10:
 		pfhr = '00'+str(fhr)
