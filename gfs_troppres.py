@@ -38,7 +38,7 @@ def anim_pv():
     fmt = '2PVU Pressure (hPa): '
     fmt += ' %Y-%m-%d %H:%M UTC'
 
-    fname = 'gfs.t'+runtime+'z.pgrb2.0p25.f000'
+    fname = '/home/jhs389/plotting/gfs.t'+runtime+'z.pgrb2.0p25.f000'
    	
     pvds = xr.open_dataset(fname,engine='cfgrib',filter_by_keys={'typeOfLevel': 'potentialVorticity'})
     dtfs = pd.to_datetime(pvds.time.values+pvds.step.values).strftime('%Y-%m-%d_%H%MZ') 
@@ -47,7 +47,7 @@ def anim_pv():
 	
     trop_pres.plot.contourf(ax=ax,transform=ccrs.PlateCarree(),levels=range(100,800,20),antialiased=True,extend='both',cmap=newcmap,norm=newnorm)
     
-    frames = range(1,4,1)
+    frames = range(1,120,1)
 
     def anim(i):
         plt.ioff()
@@ -63,7 +63,7 @@ def anim_pv():
        	else:
        		pfhr = str(fhr)
         		
-       	fname = 'gfs.t'+runtime+'z.pgrb2.0p25.f'+pfhr
+        fname = '/home/jhs389/plotting/gfs.t'+runtime+'z.pgrb2.0p25.f'+pfhr
        	
        	pvds = xr.open_dataset(fname,engine='cfgrib',filter_by_keys={'typeOfLevel': 'potentialVorticity'})
         dtfs = pd.to_datetime(pvds.time.values+pvds.step.values).strftime('%Y-%m-%d_%H%MZ') 

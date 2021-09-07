@@ -37,42 +37,62 @@ rundate, runtime = spt.get_init_time('GFS')
 animfig = plt.figure(figsize=(15,15))
 ims = []
 
-for i in range(0,120):
-	fhr = i
-	if fhr <10:
-		pfhr = '00'+str(fhr)
-	elif fhr <100:
-		pfhr = '0'+str(fhr)
-	else:
-		pfhr = str(fhr)
+# Define the colormaps
+norm_ref, cmap_ref = ctables.registry.get_with_steps('rainbow', -80., .5)
+newcmap = ListedColormap(cmap_ref(range(0, 175)))
+newnorm = Normalize(-44,48)
+
+
+def anim_t8():
+    plt.ioff()
+    f = plt.figure(figsize = (8, 4), dpi = 200)
+    f.clf()
+
+    # Create plot that can handle geographical data
+    ax = f.add_subplot(111, projection = ccrs.PlateCarree())  # Add axes to figure
+
+    # Set plot title to something meaningful
+    fmt = '850hPa Temperature (K): '
+    fmt += ' %Y-%m-%d %H:%M UTC'
+
+    fname = '/home/jhs389/plotting/gfs.t'+runtime+'z.pgrb2.0p25.f000'
+	
+    ds = xr.open_dataset(fname,engine='cfgrib',filter_by_keys={'typeOfLevel': 'isobaricInhPa'})
+    t8 = ds['t'].sel(isobaricInhPa=850)-273.15	
+    
+    frames = range(0,120,1)
+    def anim(i):
+        plt.ioff()
+        ax.cla()
+        ax.coastlines(resolution='50m')
+        fhr = i
+        if fhr <10:
+            pfhr = '00'+str(fhr)
+        elif fhr <100:
+            pfhr = '0'+str(fhr)            
+        else:
+            pfhr =  str(fhr)
 		
-	fname = '/home/jhs389/plotting/gfs.t'+runtime+'z.pgrb2.0p25.f'+pfhr
-	
-	ds = xr.open_dataset(fname,engine='cfgrib',filter_by_keys={'typeOfLevel': 'isobaricInhPa'})
-	t8 = ds['t'].sel(isobaricInhPa=850)-273.15	
-	
-	# Define the colormaps
-	norm_ref, cmap_ref = ctables.registry.get_with_steps('rainbow', -80., .5)
-	newcmap = ListedColormap(cmap_ref(range(0, 175)))
-	newnorm = Normalize(-44,48)
+        fname = '/home/jhs389/plotting/gfs.t'+runtime+'z.pgrb2.0p25.f'+pfhr
+        ds = xr.open_dataset(fname,engine='cfgrib',filter_by_keys={'typeOfLevel': 'isobaricInhPa'})
+        t8 = ds['t'].sel(isobaricInhPa=850)-273.15	
 
-	dtfs = pd.to_datetime(t8.time.values+t8.step.values).strftime('%Y-%m-%d_%H%MZ') 
-	fig, ax = plt.subplots(1, 1, figsize=(15, 15), subplot_kw={'projection': ccrs.NearsidePerspective(central_longitude=-76.5,central_latitude=42.5),'transform':ccrs.PlateCarree()})
-	ax.add_feature(cfeature.BORDERS,edgecolor='k')
-	ax.add_feature(cfeature.COASTLINE,edgecolor='k')
-	ax.add_feature(cfeature.STATES,edgecolor='k')
+        dtfs = pd.to_datetime(t8.time.values+t8.step.values).strftime('%Y-%m-%d_%H%MZ') 
+        ax.set_extent((-157,0,0,90))
 
-	t8c = ax.contourf(t8.longitude,t8.latitude,t8,norm=newnorm,cmap=newcmap,antialiased=True,levels=range(-40,40,1),alpha=0.7,transform=ccrs.PlateCarree())
-	ax.contour(t8.longitude,t8.latitude,t8,levels=[0],colors=['blue'],transform=ccrs.PlateCarree())
+        ax.contourf(t8.longitude,t8.latitude,t8,norm=newnorm,cmap=newcmap,antialiased=True,levels=range(-40,40,1),alpha=0.7,transform=ccrs.PlateCarree(),add_colorbar=True)
+        ax.contour(t8.longitude,t8.latitude,t8,levels=[0],colors=['blue'],transform=ccrs.PlateCarree())
 
-	cbar = fig.colorbar(t8c,orientation='vertical',pad=0.01,ax=ax,aspect=50,extendrect=False,ticks=range(-40,40,5),shrink=0.65)
-	ax.set_extent((-157,0,0,90))
+        ax.set_title('850hPa Temperature (C)',fontsize=16)
+        ax.set_title('Valid: '+dtfs,loc='right',fontsize=11)
+        ax.set_title('GFS Forecast via NOAA \nPlot by Jack Sillin',loc='left',fontsize=11)
+        
+        plt.ion()
+        plt.draw()
 
-	ax.set_title('850hPa Temperature (C)',fontsize=16)
-	ax.set_title('Valid: '+dtfs,loc='right',fontsize=11)
-	ax.set_title('GFS Forecast via NOAA \nPlot by Jack Sillin',loc='left',fontsize=11)
-	plt.savefig('nwh_gfs_t8temp_'+str(fhr)+'.png',bbox_inches='tight',pad_inches=0.1)
+    anim = manim.FuncAnimation(f, anim,frames, repeat=False)
+        
+    anim.save('t8_anim_test1.mp4', fps=12, codec='h264', dpi=120)
+    plt.ion()
 
-anim = manim.ArtistAnimation(animfig, ims, 20, 200,True)
-
-anim.save('t8_anim_test.mp4', fps=12, codec='h264', dpi=120)
+anim_t8()
