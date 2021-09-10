@@ -45,7 +45,7 @@ def get_init_time(model):
 
     elif model=='NAM':
         if hour <4:
-            init_time = current_time-dt.timedelta(hours=3)
+            init_time = current_time-dt.timedelta(hours=4)
             init_hour = '18'
             day = init_time.day
             month = init_time.month
@@ -61,7 +61,7 @@ def get_init_time(model):
 
     elif model=='GFS':
         if hour <5:
-            init_time = current_time-dt.timedelta(hours=3)
+            init_time = current_time-dt.timedelta(hours=5)
             init_hour = '18'
             day = init_time.day
             month = init_time.month
@@ -69,6 +69,22 @@ def get_init_time(model):
         elif hour<11:
             init_hour = '00'
         elif hour<17:
+            init_hour = '06'
+        elif hour<23:
+            init_hour = '12'
+        else:
+            init_hour = '18'
+
+    elif model=='GEOS':
+        if hour <12:
+            init_time = current_time-dt.timedelta(hours=13)
+            init_hour = '18'
+            day = init_time.day
+            month = init_time.month
+            year = init_time.year
+        elif hour<18:
+            init_hour = '00'
+        elif hour<22:
             init_hour = '06'
         elif hour<23:
             init_hour = '12'
