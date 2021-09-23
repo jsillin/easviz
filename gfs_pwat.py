@@ -18,6 +18,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 import supplementary_tools as spt
+from cartopy.util import add_cyclic_point 
 
 def load_basemap(map_path):
     img=plt.imread(map_path)
@@ -34,32 +35,55 @@ rundate, runtime = spt.get_init_time('GFS')
 animfig = plt.figure(figsize=(15,15))
 ims = []
 
-for i in range(0,120):
-	fhr = i
-	if fhr <10:
-		pfhr = '00'+str(fhr)
-	elif fhr <100:
-		pfhr = '0'+str(fhr)
-	else:
-		pfhr = str(fhr)
-		
-	fname = '/home/jhs389/plotting/gfs.t'+runtime+'z.pgrb2.0p25.f'+pfhr
-	
-	ds = xr.open_dataset(fname,engine='cfgrib',filter_by_keys={'typeOfLevel': 'atmosphereSingleLayer'})
-	pwat = ds['pwat']*0.0393701
-	
-	# Define the colormaps
-	colors = [(0,1,1,c) for c in np.linspace(0.1,.6,80)]
-	cmappwat = mcolors.LinearSegmentedColormap.from_list('mycmap', colors, N=8)	
-	dtfs = pd.to_datetime(pwat.time.values+pwat.step.values).strftime('%Y-%m-%d_%H%MZ') 
-	fig, ax = plt.subplots(1, 1, figsize=(15, 15), subplot_kw={'projection': ccrs.Robinson(),'transform':ccrs.PlateCarree()})
-	ax.imshow(bm_img,extent=bm_extent,transform=bm_proj,origin='upper')
-	ax.contourf(pwat.longitude,pwat.latitude,pwat,levels=np.linspace(0.1,2.5,50),antialiased=True,cmap=cmappwat,extend='max',transform=ccrs.PlateCarree())
-	ax.set_title('Total Column Water',fontsize=16)
-	ax.set_title('Valid: '+dtfs,loc='right',fontsize=11)
-	ax.set_title('GFS Forecast via NOAA \nPlot by Jack Sillin',loc='left',fontsize=11)
-	plt.savefig('global_gfs_pwat_'+str(fhr)+'.png',bbox_inches='tight',pad_inches=0.1)
+#Define the colormaps
+colors = [(0,1,1,c) for c in np.linspace(0.1,.6,80)]
+cmappwat = mcolors.LinearSegmentedColormap.from_list('mycmap', colors, N=8)	
 
-anim = manim.ArtistAnimation(animfig, ims, 20, 200,True)
+frames = range(0,120,1)
 
-anim.save('pwat_anim_test.mp4', fps=12, codec='h264', dpi=120)
+def anim_pwat():
+    plt.ioff()
+    f = plt.figure(figsize = (8, 4), dpi = 200, tight_layout=True)
+    f.clf()    
+    
+    ax = f.add_subplot(111, projection = ccrs.Robinson(),transform=ccrs.PlateCarree())  # Add axes to figure
+    
+    # Set plot title to something meaningful
+    fmt = 'Precipitable Water: '
+    fmt += ' %Y-%m-%d %H:%M UTC'
+
+    fname = '/home/jhs389/plotting/gfs.t'+runtime+'z.pgrb2.0p25.f000'
+
+    frames = range(0,120,1)    
+    
+    def anim(i):
+    	fhr = i
+    	if fhr <10:
+    		pfhr = '00'+str(fhr)
+    	elif fhr <100:
+    		pfhr = '0'+str(fhr)
+    	else:
+    		pfhr = str(fhr)
+        
+    
+    
+    	ds = xr.open_dataset(fname,engine='cfgrib',filter_by_keys={'typeOfLevel': 'atmosphereSingleLayer'})
+    	pwat = ds['pwat']*0.0393701 
+       
+    	dtfs = pd.to_datetime(pwat.time.values+pwat.step.values).strftime('%Y-%m-%d_%H%MZ') 
+    
+    	ax.imshow(bm_img,extent=bm_extent,transform=bm_proj,origin='upper')
+    	ax.contourf(pwat.longitude,pwat.latitude,pwat,levels=np.linspace(0.1,2.5,50),antialiased=True,cmap=cmappwat,extend='max',transform=ccrs.PlateCarree())
+    	ax.set_title('Total Column Water',fontsize=16)
+    	ax.set_title('Valid: '+dtfs,loc='right',fontsize=11)
+        ax.set_title('GFS Forecast via NOAA \nPlot by Jack Sillin',loc='left',fontsize=11)
+        
+        plt.ion()
+        plt.draw()
+
+    anim = manim.FuncAnimation(f, anim,frames, repeat=False)
+        
+    anim.save('pwat_anim.mp4', fps=12, codec='h264', dpi=120)
+    plt.ion()
+
+anim_pwat()
